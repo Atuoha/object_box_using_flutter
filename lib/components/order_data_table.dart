@@ -24,12 +24,15 @@ class _OrderDataTableState extends State<OrderDataTable> {
           sortColumnIndex: sortColumnIndex,
           columns: [
             DataColumn(
-              label: const Text('No'),
+              label: const Text('ID'),
               onSort: _onDataColumnSort,
             ),
             DataColumn(
               label: const Text('Customer'),
               onSort: _onDataColumnSort,
+            ),
+            DataColumn(
+              label: const Text('Company'),
             ),
             DataColumn(
               label: const Text('Price'),
@@ -46,6 +49,7 @@ class _OrderDataTableState extends State<OrderDataTable> {
                 DataCell(const Text('CUSTOMER NAME'), onTap: () {
                   // Todo: implement this
                 }),
+                const DataCell(Text('COMPANY')),
                 const DataCell(Text('\$PRICE')),
                 DataCell(const Icon(CupertinoIcons.delete), onTap: () {
                   // Todo: implement this

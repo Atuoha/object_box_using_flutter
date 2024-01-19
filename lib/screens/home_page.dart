@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   void setNewPerson() {
     if (kDebugMode) {
       print(faker.person.name());
+      print( faker.company.name());
     }
   }
 
