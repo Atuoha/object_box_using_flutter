@@ -5,9 +5,10 @@ import '../model/receipt.dart';
 
 class OrderDataTable extends StatefulWidget {
   const OrderDataTable(
-      {super.key, required this.onSort, required this.receipts});
+      {super.key, required this.onSort, required this.receipts,required this.handleRemoveReceiptDialog});
 
   final void Function(int column, bool ascending) onSort;
+  final void Function(int id) handleRemoveReceiptDialog;
   final List<Receipt> receipts;
 
   @override
@@ -57,7 +58,7 @@ class _OrderDataTableState extends State<OrderDataTable> {
                       DataCell(Text(receipt.customer.target!.company)),
                       DataCell(Text('\$${receipt.amount}')),
                       DataCell(const Icon(CupertinoIcons.delete), onTap: () {
-                        // Todo: implement this
+                        widget.handleRemoveReceiptDialog(receipt.id);
                       }),
                     ],
                   ),

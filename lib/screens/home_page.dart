@@ -3,11 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:object_box/objectbox.g.dart';
+import 'package:object_box/widgets/are_you_dialog.dart';
+import 'package:object_box/widgets/toast_info.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:path_provider/path_provider.dart';
 import '../components/order_data_table.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
 
+import '../constants/enums/status.dart';
 import '../model/receipt.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   late Customer customer;
   late Receipt receipt;
   Stream<List<Receipt>>? stream;
+  late Box<Receipt> box;
 
   @override
   void initState() {
@@ -32,7 +36,7 @@ class _HomePageState extends State<HomePage> {
     getApplicationDocumentsDirectory().then((dir) {
       store = Store(
         getObjectBoxModel(),
-        directory: join(dir.path, 'objectbox'),
+        directory: path.join(dir.path, 'objectbox'),
       );
       setState(() {
         stream = store
@@ -45,6 +49,7 @@ class _HomePageState extends State<HomePage> {
               (query) => query.find(),
             );
         isStoreInitialized = true;
+        box = store.box<Receipt>();
       });
     });
   }
@@ -71,7 +76,6 @@ class _HomePageState extends State<HomePage> {
     int amount = faker.randomGenerator.integer(1000, min: 10);
     receipt = Receipt(amount: amount);
     receipt.customer.target = customer;
-    final box = store.box<Receipt>();
     box.put(receipt);
 
     if (kDebugMode) {
@@ -79,6 +83,26 @@ class _HomePageState extends State<HomePage> {
       print(customer.name);
       print(customer.company);
     }
+  }
+
+  void handleRemoveReceiptDialog(int id) {
+    areYouSureDialog(
+      title: 'Remove Receipt',
+      content: 'Are you sure you want to remove this receipt?',
+      context: context,
+      action: handleRemoveReceipt,
+      isIdInvolved: true,
+      id: id,
+    );
+  }
+
+  void handleRemoveReceipt(int id) {
+    box.remove(id);
+    Navigator.of(context).pop();
+    toastInfo(
+      msg: 'Receipt removed successfully',
+      status: Status.success,
+    );
   }
 
   @override
@@ -128,6 +152,7 @@ class _HomePageState extends State<HomePage> {
                     // Todo: implement this
                   },
                   receipts: receipts,
+                  handleRemoveReceiptDialog: handleRemoveReceiptDialog,
                 )
               : const Center(
                   child: Text(
