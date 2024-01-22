@@ -11,6 +11,8 @@ class Receipt {
     this.id = 0,
     required this.amount,
   });
+
+
 }
 
 @Entity()
