@@ -4,11 +4,17 @@ import 'package:flutter/material.dart';
 import '../model/receipt.dart';
 
 class OrderDataTable extends StatefulWidget {
-  const OrderDataTable(
-      {super.key, required this.onSort, required this.receipts,required this.handleRemoveReceiptDialog});
+  const OrderDataTable({
+    super.key,
+    required this.onSort,
+    required this.receipts,
+    required this.handleRemoveReceiptDialog,
+    required this.showCustomerOrders,
+  });
 
-  final void Function(int column, bool ascending) onSort;
+  final void Function(int columnIndex, bool ascending) onSort;
   final void Function(int id) handleRemoveReceiptDialog;
+  final void Function(Receipt receipt) showCustomerOrders;
   final List<Receipt> receipts;
 
   @override
@@ -32,9 +38,8 @@ class _OrderDataTableState extends State<OrderDataTable> {
                 label: const Text('ID'),
                 onSort: _onDataColumnSort,
               ),
-              DataColumn(
-                label: const Text('Customer'),
-                onSort: _onDataColumnSort,
+              const DataColumn(
+                label: Text('Customer'),
               ),
               const DataColumn(
                 label: Text('Company'),
@@ -53,7 +58,7 @@ class _OrderDataTableState extends State<OrderDataTable> {
                     cells: [
                       DataCell(Text(receipt.id.toString())),
                       DataCell(Text(receipt.customer.target!.name), onTap: () {
-                        // Todo: implement this
+                        widget.showCustomerOrders(receipt);
                       }),
                       DataCell(Text(receipt.customer.target!.company)),
                       DataCell(Text('\$${receipt.amount}')),

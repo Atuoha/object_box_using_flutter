@@ -9,7 +9,6 @@ import 'package:objectbox/objectbox.dart';
 import 'package:path_provider/path_provider.dart';
 import '../components/order_data_table.dart';
 import 'package:path/path.dart' as path;
-
 import '../constants/enums/status.dart';
 import '../model/receipt.dart';
 
@@ -31,7 +30,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    setNewPerson();
+    setNewCustomer();
     super.initState();
     getApplicationDocumentsDirectory().then((dir) {
       store = Store(
@@ -60,7 +59,8 @@ class _HomePageState extends State<HomePage> {
     store.close();
   }
 
-  void setNewPerson() {
+  // set new customer
+  void setNewCustomer() {
     customer = Customer(
       name: faker.person.name(),
       company: faker.company.name(),
@@ -72,6 +72,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // add  receipt
   void addNewData() {
     int amount = faker.randomGenerator.integer(1000, min: 10);
     receipt = Receipt(amount: amount);
@@ -85,6 +86,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // delete  receipt dialog
   void handleRemoveReceiptDialog(int id) {
     areYouSureDialog(
       title: 'Remove Receipt',
@@ -96,6 +98,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // delete  receipt
   void handleRemoveReceipt(int id) {
     box.remove(id);
     Navigator.of(context).pop();
@@ -105,6 +108,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // delete all receipts dialog
   void handleRemoveAllReceiptsDialog() {
     areYouSureDialog(
       title: 'Remove Receipts',
@@ -114,12 +118,90 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // delete all receipts
   void handleRemoveAllReceipts() {
     box.removeAll();
     Navigator.of(context).pop();
     toastInfo(
-      msg: 'All Receipts removed successfully',
+      msg: 'All receipts removed successfully',
       status: Status.success,
+    );
+  }
+
+  void handleRemoveAllCustomerReceipts(List<int> ids) {
+    box.removeMany(ids);
+    Navigator.of(context).pop();
+    toastInfo(
+      msg: 'All Customer receipts removed successfully',
+      status: Status.success,
+    );
+  }
+
+  // show customer orders
+  Future showCustomerOrders(Receipt receipt) {
+    final List<Receipt> customerReceipts = receipt.customer.target!.orders
+        .map(
+          (receipt) => Receipt(
+            amount: receipt.amount,
+            id: receipt.id,
+          ),
+        )
+        .toList();
+
+    final List<int> ids =
+        customerReceipts.map((receipt) => receipt.id).toList();
+
+    print(ids);
+
+    return showModalBottomSheet(
+      context: context,
+      builder: (context) => SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.all(18.0),
+          child: Column(
+            // mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'All receipts by ${receipt.customer.target!.name}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => handleRemoveAllCustomerReceipts(ids),
+                    icon: const Icon(
+                      CupertinoIcons.delete,
+                    ),
+                  )
+                ],
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: customerReceipts.length,
+                  itemBuilder: (context, index) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey.withOpacity(0.3),
+                      child: const Icon(
+                        CupertinoIcons.money_dollar_circle,
+                        color: Colors.white,
+                      ),
+                    ),
+                    title: Text('\$${customerReceipts[index].amount}'),
+                    subtitle: Text('Receipt id: ${customerReceipts[index].id}'),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -130,7 +212,7 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Exploring ObjectBox'),
         actions: [
           IconButton(
-            onPressed: () => setNewPerson(),
+            onPressed: () => setNewCustomer(),
             icon: const Icon(
               CupertinoIcons.person_add,
             ),
@@ -183,11 +265,32 @@ class _HomePageState extends State<HomePage> {
           }
 
           return OrderDataTable(
-            onSort: (int column, bool ascending) {
-              // Todo: implement this
+            onSort: (int columnIndex, bool ascending) {
+              final newQueryBuilder = box.query();
+
+              // sort field
+              final field = columnIndex == 0 ? Receipt_.id : Receipt_.amount;
+
+              // order
+              newQueryBuilder.order(
+                field,
+                flags: ascending ? 0 : Order.descending,
+              );
+
+              // set stream
+              setState(() {
+                stream = newQueryBuilder
+                    .watch(
+                      triggerImmediately: true,
+                    )
+                    .map(
+                      (query) => query.find(),
+                    );
+              });
             },
             receipts: receipts,
             handleRemoveReceiptDialog: handleRemoveReceiptDialog,
+            showCustomerOrders: showCustomerOrders,
           );
         },
       ),
