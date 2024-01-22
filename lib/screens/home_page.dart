@@ -105,6 +105,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void handleRemoveAllReceiptsDialog() {
+    areYouSureDialog(
+      title: 'Remove Receipts',
+      content: 'Are you sure you want to remove all receipts?',
+      context: context,
+      action: handleRemoveAllReceipts,
+    );
+  }
+
+  void handleRemoveAllReceipts() {
+    box.removeAll();
+    Navigator.of(context).pop();
+    toastInfo(
+      msg: 'All Receipts removed successfully',
+      status: Status.success,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,6 +139,12 @@ class _HomePageState extends State<HomePage> {
             onPressed: () => addNewData(),
             icon: const Icon(
               CupertinoIcons.money_dollar,
+            ),
+          ),
+          IconButton(
+            onPressed: () => handleRemoveAllReceiptsDialog(),
+            icon: const Icon(
+              CupertinoIcons.delete,
             ),
           )
         ],
@@ -146,23 +170,25 @@ class _HomePageState extends State<HomePage> {
             );
           }
 
-          return snapshot.hasData
-              ? OrderDataTable(
-                  onSort: (int column, bool ascending) {
-                    // Todo: implement this
-                  },
-                  receipts: receipts,
-                  handleRemoveReceiptDialog: handleRemoveReceiptDialog,
-                )
-              : const Center(
-                  child: Text(
-                    'The receipt list is empty!',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
+          if (receipts.isEmpty) {
+            return const Center(
+              child: Text(
+                'The receipt list is empty!',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          }
+
+          return OrderDataTable(
+            onSort: (int column, bool ascending) {
+              // Todo: implement this
+            },
+            receipts: receipts,
+            handleRemoveReceiptDialog: handleRemoveReceiptDialog,
+          );
         },
       ),
     );
